@@ -86,19 +86,12 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 h-16 border-b border-ink-100 shrink-0">
-          {branding.logoUrl ? (
+          {branding.logoUrl && (
             <motion.div
               whileHover={{ scale: 1.05 }}
               className="w-10 h-10 rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-white border border-ink-200"
             >
               <img src={branding.logoUrl} alt={branding.name} className="w-full h-full object-contain p-0.5" />
-            </motion.div>
-          ) : (
-            <motion.div
-              whileHover={{ rotate: 15, scale: 1.1 }}
-              className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-accent-500 flex items-center justify-center shrink-0 shadow-glow"
-            >
-              <Sparkles className="w-6 h-6 text-white" />
             </motion.div>
           )}
           <AnimatePresence>

@@ -25,9 +25,15 @@ export function LoadingScreen() {
 
       <div className="relative z-10 flex flex-col items-center px-6 text-center">
         <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} className="relative">
-          <motion.div animate={{ scale: [1, 1.08, 1], rotate: [0, 3, 0] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }} className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-[26px] border border-white/15 bg-white/10 p-2 shadow-[0_20px_70px_rgba(8,145,178,0.3)] backdrop-blur-xl">
-            {branding.logoUrl ? <img src={branding.logoUrl} alt={branding.name} className="h-full w-full object-contain" /> : <Sparkles className="h-10 w-10 text-cyan-200" />}
-          </motion.div>
+          {branding.logoUrl ? (
+            <motion.div animate={{ scale: [1, 1.08, 1], rotate: [0, 3, 0] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }} className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-[26px] border border-white/15 bg-white/10 p-2 shadow-[0_20px_70px_rgba(8,145,178,0.3)] backdrop-blur-xl">
+              <img src={branding.logoUrl} alt={branding.name} className="h-full w-full object-contain" />
+            </motion.div>
+          ) : (
+            <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }} className="flex h-14 items-center justify-center">
+              <span className="text-3xl font-semibold tracking-[-0.04em] text-white">{branding.name.charAt(0).toUpperCase()}</span>
+            </motion.div>
+          )}
           <motion.div className="absolute -inset-4 rounded-[32px] border border-cyan-300/20" animate={{ scale: [0.9, 1.15, 0.9], opacity: [0.7, 0.1, 0.7] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }} />
         </motion.div>
 

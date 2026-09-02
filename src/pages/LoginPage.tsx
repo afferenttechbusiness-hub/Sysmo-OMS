@@ -196,13 +196,10 @@ export function LoginPage() {
 }
 
 function BrandMark({ logoUrl, name }: { logoUrl: string | null; name: string }) {
-  return logoUrl ? (
+  if (!logoUrl) return null;
+  return (
     <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-1 shadow-2xl">
       <img src={logoUrl} alt={name} className="h-full w-full object-contain" />
-    </div>
-  ) : (
-    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 shadow-[0_12px_35px_rgba(14,165,233,0.35)]">
-      <Sparkles className="h-6 w-6 text-white" />
     </div>
   );
 }

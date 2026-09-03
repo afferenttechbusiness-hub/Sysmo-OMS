@@ -236,6 +236,82 @@ export interface Report {
   created_at: string;
 }
 
+// ============================================================
+// SaaS Layer Types
+// ============================================================
+
+export type SaaSRole = 'saas_admin' | 'customer';
+export type TenantStatus = 'active' | 'suspended' | 'cancelled';
+export type SubscriptionStatus = 'pending' | 'approved' | 'rejected' | 'suspended' | 'cancelled';
+export type BillingCycle = 'monthly' | 'yearly';
+export type TenantMemberRole = 'admin' | 'moderator' | 'employee';
+
+export interface SaaSUser {
+  id: string;
+  email: string;
+  full_name: string | null;
+  company_name: string | null;
+  phone: string | null;
+  role: SaaSRole;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SaaSPlan {
+  id: string;
+  name: string;
+  description: string | null;
+  price_monthly: number;
+  price_yearly: number;
+  max_users: number;
+  max_departments: number | null;
+  features: string[];
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  owner_id: string;
+  plan_id: string;
+  subscription_id: string | null;
+  status: TenantStatus;
+  settings: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TenantMember {
+  id: string;
+  tenant_id: string;
+  saas_user_id: string;
+  role: TenantMemberRole;
+  department_id: string | null;
+  invited_at: string;
+  joined_at: string;
+}
+
+export interface SaaSSubscription {
+  id: string;
+  saas_user_id: string;
+  plan_id: string;
+  tenant_id: string | null;
+  status: SubscriptionStatus;
+  billing_cycle: BillingCycle;
+  amount: number;
+  payment_method: string | null;
+  payment_reference: string | null;
+  admin_note: string | null;
+  created_at: string;
+  approved_at: string | null;
+  updated_at: string;
+}
+
 // Database type for Supabase
 export interface Database {
   public: {

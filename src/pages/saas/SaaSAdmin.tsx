@@ -13,7 +13,7 @@ type SubWithRelations = SaaSSubscription & { plan: SaaSPlan; saas_user: SaaSUser
 export function SaaSAdmin() {
   const { user, signOut } = useSaaSAuth();
   const { branding } = useSiteBranding();
-  const { toast } = useToast();
+  const { notify } = useToast();
   const navigate = useNavigate();
   const [subs, setSubs] = useState<SubWithRelations[]>([]);
   const [allTenants, setAllTenants] = useState<(Tenant & { plan: SaaSPlan })[]>([]);
@@ -40,8 +40,8 @@ export function SaaSAdmin() {
     setActionLoading(subId);
     const { error } = await supabase.rpc('create_tenant_for_subscription', { sub_uuid: subId });
     setActionLoading(null);
-    if (error) { toast({ title: 'Error', description: error.message, variant: 'error' }); return; }
-    toast({ title: 'Approved', description: 'Tenant workspace created successfully.', variant: 'success' });
+    if (error) { notify({ type: 'error', title: 'Error', message: error.message }); return; }
+    notify({ type: 'success', title: 'Approved', message: 'Tenant workspace created successfully.' });
     loadData();
   };
 
@@ -49,8 +49,8 @@ export function SaaSAdmin() {
     setActionLoading(subId);
     const { error } = await supabase.from('saas_subscriptions').update({ status: 'rejected', admin_note: 'Rejected by admin', updated_at: new Date().toISOString() }).eq('id', subId);
     setActionLoading(null);
-    if (error) { toast({ title: 'Error', description: error.message, variant: 'error' }); return; }
-    toast({ title: 'Rejected', description: 'Subscription request rejected.', variant: 'info' });
+    if (error) { notify({ type: 'error', title: 'Error', message: error.message }); return; }
+    notify({ type: 'info', title: 'Rejected', message: 'Subscription request rejected.' });
     loadData();
   };
 

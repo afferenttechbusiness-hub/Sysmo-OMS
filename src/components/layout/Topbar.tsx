@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn, relativeTime } from '@/lib/utils';
 import type { Notification, Profile, Department, Project, Notice } from '@/lib/types';
+import { useParams } from 'react-router-dom';
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -17,6 +18,8 @@ interface TopbarProps {
 export function Topbar({ onMenuClick, onCollapse, collapsed }: TopbarProps) {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const { slug } = useParams<{ slug: string }>();
+  const basePath = slug ? `/t/${slug}/app` : '/app';
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [notifOpen, setNotifOpen] = useState(false);
@@ -151,7 +154,7 @@ export function Topbar({ onMenuClick, onCollapse, collapsed }: TopbarProps) {
                   {searchResults.employees.length > 0 && (
                     <SearchSection title="Employees">
                       {searchResults.employees.map((emp) => (
-                        <SearchItem key={emp.id} onClick={() => { navigate(`/app/profile/${emp.id}`); setSearchOpen(false); setSearchQuery(''); }}>
+                        <SearchItem key={emp.id} onClick={() => { navigate(`${basePath}/profile/${emp.id}`); setSearchOpen(false); setSearchQuery(''); }}>
                           <Avatar src={emp.avatar_url} name={emp.full_name} size="sm" />
                           <div>
                             <p className="text-sm font-medium text-ink-900">{emp.full_name}</p>
@@ -165,7 +168,7 @@ export function Topbar({ onMenuClick, onCollapse, collapsed }: TopbarProps) {
                   {searchResults.departments.length > 0 && (
                     <SearchSection title="Departments">
                       {searchResults.departments.map((d) => (
-                        <SearchItem key={d.id} onClick={() => { navigate('/app/department'); setSearchOpen(false); setSearchQuery(''); }}>
+                        <SearchItem key={d.id} onClick={() => { navigate(`${basePath}/department`); setSearchOpen(false); setSearchQuery(''); }}>
                           <div className="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center text-brand-600 font-semibold text-xs">
                             {d.name.slice(0, 2).toUpperCase()}
                           </div>
@@ -177,7 +180,7 @@ export function Topbar({ onMenuClick, onCollapse, collapsed }: TopbarProps) {
                   {searchResults.projects.length > 0 && (
                     <SearchSection title="Projects">
                       {searchResults.projects.map((p) => (
-                        <SearchItem key={p.id} onClick={() => { navigate('/app/projects'); setSearchOpen(false); setSearchQuery(''); }}>
+                        <SearchItem key={p.id} onClick={() => { navigate(`${basePath}/projects`); setSearchOpen(false); setSearchQuery(''); }}>
                           <div className="w-8 h-8 rounded-lg bg-accent-100 flex items-center justify-center text-accent-600">
                             <FolderIcon />
                           </div>
@@ -192,7 +195,7 @@ export function Topbar({ onMenuClick, onCollapse, collapsed }: TopbarProps) {
                   {searchResults.notices.length > 0 && (
                     <SearchSection title="Notices">
                       {searchResults.notices.map((n) => (
-                        <SearchItem key={n.id} onClick={() => { navigate('/app/notice'); setSearchOpen(false); setSearchQuery(''); }}>
+                        <SearchItem key={n.id} onClick={() => { navigate(`${basePath}/notice`); setSearchOpen(false); setSearchQuery(''); }}>
                           <div className="w-8 h-8 rounded-lg bg-warning-100 flex items-center justify-center text-warning-600">
                             <BellIcon />
                           </div>
@@ -268,7 +271,7 @@ export function Topbar({ onMenuClick, onCollapse, collapsed }: TopbarProps) {
       </div>
 
       {/* Profile avatar */}
-      <button onClick={() => navigate('/app/profile')} className="shrink-0">
+      <button onClick={() => navigate(`${basePath}/profile`)} className="shrink-0">
         <Avatar src={profile?.avatar_url} name={profile?.full_name} size="md" ring />
       </button>
     </header>

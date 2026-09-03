@@ -7,6 +7,7 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
+import { useParams } from 'react-router-dom';
 import { useSiteBranding } from '@/lib/hooks';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
@@ -19,23 +20,23 @@ interface NavItem {
   roles?: UserRole[];
 }
 
-const navItems: NavItem[] = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/app/dashboard' },
-  { label: 'Tasks', icon: CheckSquare, path: '/app/tasks' },
-  { label: 'Projects', icon: FolderKanban, path: '/app/projects' },
-  { label: 'Team', icon: Users, path: '/app/team' },
-  { label: 'Department', icon: Building2, path: '/app/department' },
-  { label: 'Schedule', icon: CalendarDays, path: '/app/schedule' },
-  { label: 'Notice', icon: Bell, path: '/app/notice' },
-  { label: 'Messenger', icon: MessageSquare, path: '/app/messenger' },
-  { label: 'Transaction', icon: Wallet, path: '/app/transaction' },
-  { label: 'Application', icon: FileText, path: '/app/application' },
-  { label: 'Profile', icon: UserCircle, path: '/app/profile' },
-  { label: 'Settings', icon: Settings, path: '/app/settings' },
+const baseNavItems: Omit<NavItem, 'path'>[] = [
+  { label: 'Dashboard', icon: LayoutDashboard },
+  { label: 'Tasks', icon: CheckSquare },
+  { label: 'Projects', icon: FolderKanban },
+  { label: 'Team', icon: Users },
+  { label: 'Department', icon: Building2 },
+  { label: 'Schedule', icon: CalendarDays },
+  { label: 'Notice', icon: Bell },
+  { label: 'Messenger', icon: MessageSquare },
+  { label: 'Transaction', icon: Wallet },
+  { label: 'Application', icon: FileText },
+  { label: 'Profile', icon: UserCircle },
+  { label: 'Settings', icon: Settings },
 ];
 
-const adminItems: NavItem[] = [
-  { label: 'Admin Panel', icon: ShieldCheck, path: '/app/admin', roles: ['admin'] },
+const baseAdminItems: Omit<NavItem, 'path'>[] = [
+  { label: 'Admin Panel', icon: ShieldCheck, roles: ['admin'] },
 ];
 
 interface SidebarProps {
@@ -49,14 +50,19 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }: 
   const { profile, logout } = useAuth();
   const { branding } = useSiteBranding();
   const navigate = useNavigate();
+  const { slug } = useParams<{ slug: string }>();
   const role = profile?.role || 'employee';
+  const basePath = slug ? `/t/${slug}/app` : '/app';
+
+  const navItems: NavItem[] = baseNavItems.map((item) => ({ ...item, path: `${basePath}/${item.label.toLowerCase()}` }));
+  const adminItems: NavItem[] = baseAdminItems.map((item) => ({ ...item, path: `${basePath}/admin` }));
 
   const visibleItems = navItems.filter(item => !item.roles || item.roles.includes(role));
   const adminNav = adminItems.filter(item => !item.roles || item.roles.includes(role));
 
   const handleSignOut = () => {
     logout();
-    navigate('/');
+    navigate(slug ? `/t/${slug}` : '/saas/dashboard');
   };
 
   return (

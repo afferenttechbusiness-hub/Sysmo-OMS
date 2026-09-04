@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShieldCheck, CheckCircle2, XCircle, Clock, Loader2, LogOut, Users, Building2, DollarSign, Package, Sparkles } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, XCircle, Clock, Loader2, LogOut, Users, Building2, DollarSign, Package, Sparkles, ArrowRight } from 'lucide-react';
 import { useSaaSAuth } from '@/lib/saas-auth';
 import { useSiteBranding } from '@/lib/hooks';
 import { supabase } from '@/lib/supabase';
@@ -18,6 +18,7 @@ export function SaaSAdmin() {
   const [subs, setSubs] = useState<SubWithRelations[]>([]);
   const [allTenants, setAllTenants] = useState<(Tenant & { plan: SaaSPlan })[]>([]);
   const [allUsers, setAllUsers] = useState<SaaSUser[]>([]);
+  const [myTenant, setMyTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [tab, setTab] = useState<'subscriptions' | 'tenants' | 'users' | 'plans'>('subscriptions');
@@ -31,6 +32,8 @@ export function SaaSAdmin() {
     setSubs((subRes.data as SubWithRelations[]) || []);
     setAllTenants((tenantRes.data as (Tenant & { plan: SaaSPlan })[]) || []);
     setAllUsers((userRes.data as SaaSUser[]) || []);
+    const mine = (tenantRes.data as (Tenant & { plan: SaaSPlan })[])?.find((t) => t.owner_id === user?.id) || null;
+    setMyTenant(mine);
     setLoading(false);
   }, []);
 
@@ -72,6 +75,11 @@ export function SaaSAdmin() {
             <span className="text-base font-semibold text-ink-900">SaaS Admin Panel</span>
           </div>
           <div className="flex items-center gap-3">
+            {myTenant && (
+              <Link to={`/t/${myTenant.slug}`} className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700">
+                <Building2 className="h-3.5 w-3.5" /> My Workspace <ArrowRight className="h-3 w-3" />
+              </Link>
+            )}
             <Link to="/saas/dashboard" className="text-sm text-ink-500 hover:text-ink-900">Dashboard</Link>
             <button onClick={handleSignOut} className="rounded-lg p-2 text-ink-400 hover:bg-red-50 hover:text-red-500"><LogOut className="h-4 w-4" /></button>
           </div>
@@ -88,8 +96,25 @@ export function SaaSAdmin() {
           <StatCard icon={<Clock />} label="Pending" value={pendingSubs.length} color="amber" />
           <StatCard icon={<Building2 />} label="Tenants" value={allTenants.length} color="blue" />
           <StatCard icon={<Users />} label="Users" value={allUsers.length} color="purple" />
-          <StatCard icon={<DollarSign />} label="Revenue" value={`$${totalRevenue.toFixed(0)}`} color="green" />
+          <StatCard icon={<DollarSign />} label="Revenue" value={`${totalRevenue.toFixed(0)}`} color="green" />
         </div>
+
+        {myTenant && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mt-6 card overflow-hidden">
+            <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 text-white shadow-lg"><Building2 className="h-6 w-6" /></div>
+                <div>
+                  <h3 className="text-lg font-semibold text-ink-900">{myTenant.name}</h3>
+                  <p className="text-sm text-ink-400">Your office management workspace</p>
+                </div>
+              </div>
+              <Link to={`/t/${myTenant.slug}`} className="flex items-center justify-center gap-2 rounded-xl bg-ink-900 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-ink-800">
+                Open My Workspace <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </motion.div>
+        )}
 
         <div className="mt-8 flex gap-1 border-b border-ink-200">
           {(['subscriptions', 'tenants', 'users', 'plans'] as const).map((t) => (

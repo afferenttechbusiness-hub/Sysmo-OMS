@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Mail, Building2, ChevronDown, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Spinner } from '@/components/ui/Animations';
-import type { Department, Tenant } from '@/lib/types';
+import type { Department, Tenant, Profile } from '@/lib/types';
 
 const TENANT_SESSION_KEY = 'sysmobyte_tenant_session';
 
@@ -44,6 +44,15 @@ export function TenantLoginPage() {
     setSubmitting(true);
     const normalizedEmail = email.trim().toLowerCase();
 
+    // Check if this person is the tenant owner
+    const { data: ownerUser } = await supabase
+      .from('saas_users')
+      .select('id, email')
+      .eq('id', tenant.owner_id)
+      .maybeSingle();
+    const isOwnerEmail = ownerUser?.email?.toLowerCase() === normalizedEmail;
+    const profileRole = isOwnerEmail ? 'admin' : 'employee';
+
     const { data: existing } = await supabase
       .from('profiles')
       .select('*')
@@ -54,15 +63,16 @@ export function TenantLoginPage() {
     let profile;
     if (existing) {
       if (departmentId && existing.department_id !== departmentId) {
-        await supabase.from('profiles').update({ department_id: departmentId }).eq('id', existing.id);
+        await supabase.from('profiles').update({ department_id: departmentId, role: profileRole }).eq('id', existing.id);
         existing.department_id = departmentId;
+        existing.role = profileRole as Profile['role'];
       }
       profile = existing;
     } else {
       const fullName = normalizedEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
       const { data: created, error: createError } = await supabase
         .from('profiles')
-        .insert({ email: normalizedEmail, full_name: fullName, role: 'employee', department_id: departmentId, tenant_id: tenant.id })
+        .insert({ email: normalizedEmail, full_name: fullName, role: profileRole, department_id: departmentId, tenant_id: tenant.id })
         .select('*')
         .single();
       if (createError) { setError(createError.message); setSubmitting(false); return; }

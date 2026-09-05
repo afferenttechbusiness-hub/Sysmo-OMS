@@ -44,14 +44,25 @@ export function TenantLoginPage() {
     setSubmitting(true);
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Check if this person is the tenant owner
-    const { data: ownerUser } = await supabase
-      .from('saas_users')
-      .select('id, email')
-      .eq('id', tenant.owner_id)
-      .maybeSingle();
-    const isOwnerEmail = ownerUser?.email?.toLowerCase() === normalizedEmail;
-    const profileRole = isOwnerEmail ? 'admin' : 'employee';
+    // Determine role: check tenant_members for the logged-in SaaS user's role
+    let profileRole: Profile['role'] = 'employee';
+    const { data: { session: saasSession } } = await supabase.auth.getSession();
+    const saasUserId = saasSession?.user?.id;
+    if (saasUserId) {
+      const { data: member } = await supabase
+        .from('tenant_members')
+        .select('role')
+        .eq('tenant_id', tenant.id)
+        .eq('saas_user_id', saasUserId)
+        .maybeSingle();
+      if (member?.role === 'admin') {
+        profileRole = 'admin';
+      }
+    }
+    // Fallback: if no SaaS session, check if email matches tenant owner
+    if (profileRole === 'employee' && saasUserId === tenant.owner_id) {
+      profileRole = 'admin';
+    }
 
     const { data: existing } = await supabase
       .from('profiles')
@@ -62,11 +73,10 @@ export function TenantLoginPage() {
 
     let profile;
     if (existing) {
-      if (departmentId && existing.department_id !== departmentId) {
-        await supabase.from('profiles').update({ department_id: departmentId, role: profileRole }).eq('id', existing.id);
-        existing.department_id = departmentId;
-        existing.role = profileRole as Profile['role'];
-      }
+      // Always sync role and department
+      await supabase.from('profiles').update({ department_id: departmentId, role: profileRole }).eq('id', existing.id);
+      existing.department_id = departmentId;
+      existing.role = profileRole;
       profile = existing;
     } else {
       const fullName = normalizedEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());

@@ -26,10 +26,11 @@ export function SaaSAuthProvider({ children }: { children: ReactNode }) {
   const [memberships, setMemberships] = useState<TenantMember[]>([]);
 
   const loadData = useCallback(async (userId: string) => {
-    const [userRes, subRes, memberRes] = await Promise.all([
+    const [userRes, subRes, memberRes, tenantRes] = await Promise.all([
       supabase.from('saas_users').select('*').eq('id', userId).maybeSingle(),
       supabase.from('saas_subscriptions').select('*, plan:saas_plans(*)').eq('saas_user_id', userId).order('created_at', { ascending: false }),
       supabase.from('tenant_members').select('*, tenant:tenants(*)').eq('saas_user_id', userId),
+      supabase.from('tenants').select('*').eq('owner_id', userId).order('created_at', { ascending: false }),
     ]);
 
     const saasUser = userRes.data as SaaSUser | null;
@@ -37,7 +38,12 @@ export function SaaSAuthProvider({ children }: { children: ReactNode }) {
     setSubscriptions((subRes.data as SaaSSubscription[]) || []);
     const members = (memberRes.data as (TenantMember & { tenant: Tenant })[]) || [];
     setMemberships(members);
-    setTenants(members.map((m) => m.tenant).filter(Boolean));
+    const memberTenants = members.map((m) => m.tenant).filter(Boolean) as Tenant[];
+    const ownerTenants = (tenantRes.data as Tenant[]) || [];
+    // Merge and deduplicate by id
+    const tenantMap = new Map<string, Tenant>();
+    [...memberTenants, ...ownerTenants].forEach((t) => tenantMap.set(t.id, t));
+    setTenants(Array.from(tenantMap.values()));
   }, []);
 
   useEffect(() => {

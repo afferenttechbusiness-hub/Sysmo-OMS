@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShieldCheck, CheckCircle2, XCircle, Clock, Loader2, LogOut, Users, Building2, DollarSign, Package, Sparkles, ArrowRight } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, XCircle, Clock, Loader2, LogOut, Users, Building2, DollarSign, Package, Sparkles, ArrowRight, ExternalLink } from 'lucide-react';
 import { useSaaSAuth } from '@/lib/saas-auth';
 import { useSiteBranding } from '@/lib/hooks';
 import { supabase } from '@/lib/supabase';
@@ -29,13 +29,15 @@ export function SaaSAdmin() {
       supabase.from('tenants').select('*, plan:saas_plans(*)').order('created_at', { ascending: false }),
       supabase.from('saas_users').select('*').order('created_at', { ascending: false }),
     ]);
-    setSubs((subRes.data as SubWithRelations[]) || []);
-    setAllTenants((tenantRes.data as (Tenant & { plan: SaaSPlan })[]) || []);
+    const subData = (subRes.data as SubWithRelations[]) || [];
+    const tenantData = (tenantRes.data as (Tenant & { plan: SaaSPlan })[]) || [];
+    setSubs(subData);
+    setAllTenants(tenantData);
     setAllUsers((userRes.data as SaaSUser[]) || []);
-    const mine = (tenantRes.data as (Tenant & { plan: SaaSPlan })[])?.find((t) => t.owner_id === user?.id) || null;
+    const mine = tenantData.find((t) => t.owner_id === user?.id) || null;
     setMyTenant(mine);
     setLoading(false);
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -128,7 +130,9 @@ export function SaaSAdmin() {
           ) : tab === 'subscriptions' ? (
             <div className="space-y-3">
               {subs.length === 0 && <p className="py-8 text-center text-sm text-ink-400">No subscriptions yet.</p>}
-              {subs.map((sub) => (
+              {subs.map((sub) => {
+                const subTenant = allTenants.find((t) => t.subscription_id === sub.id);
+                return (
                 <div key={sub.id} className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <StatusIcon status={sub.status} />
@@ -149,9 +153,14 @@ export function SaaSAdmin() {
                         </button>
                       </>
                     )}
+                    {sub.status === 'approved' && subTenant && (
+                      <Link to={`/t/${subTenant.slug}`} className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700">
+                        <ExternalLink className="h-3.5 w-3.5" /> Open workspace
+                      </Link>
+                    )}
                   </div>
                 </div>
-              ))}
+              );})}
             </div>
           ) : tab === 'tenants' ? (
             <div className="space-y-3">
@@ -162,7 +171,12 @@ export function SaaSAdmin() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Building2 className="h-5 w-5" /></div>
                     <div><p className="font-medium text-ink-900">{t.name}</p><p className="text-xs text-ink-400">/{t.slug} — {t.plan.name}</p></div>
                   </div>
-                  <span className={`badge ${t.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{t.status}</span>
+                  <div className="flex items-center gap-2">
+                    <Link to={`/t/${t.slug}`} className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-700">
+                      <ExternalLink className="h-3.5 w-3.5" /> Open
+                    </Link>
+                    <span className={`badge ${t.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{t.status}</span>
+                  </div>
                 </div>
               ))}
             </div>
